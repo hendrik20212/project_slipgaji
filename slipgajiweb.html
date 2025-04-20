@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="id"> 
+  <head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Kalkulator Gaji</title> 
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        background: linear-gradient(to right, #e0f7fa, #f0f4f8);
+        color: #333;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #1d4ed8;
+        margin-bottom: 30px;
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #1d4ed8;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      button:hover {
+        background-color: #2563eb;
+      }
+      .result {
+        margin-top: 30px;
+      }
+      .result .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+      }
+      .result .row:last-child {
+        border-bottom: none;
+      }
+      .result .label {
+        font-weight: 500;
+      }
+      .result .value {
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .highlight {
+        background-color: #e0f2fe;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-weight: bold;
+      }
+      .tull-box {
+        background-color: #e0f2fe;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        margin-top: 20px;
+      }
+      .tull-row {
+        white-space: pre;
+        padding: 2px 0;
+      }
+
+      .dropdown {
+        margin-bottom: 10px;
+      }
+      .dropdown-header {
+        background-color: #f0f4f8;
+        padding: 10px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        cursor: pointer;
+      }
+      .dropdown-content {
+        background-color: #ffffff;
+        padding: 0 10px;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: max-height 0.4s ease, opacity 0.4s ease, transform 0.4s ease;
+        margin-top: 5px;
+        border-radius: 8px;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+      }
+      .dropdown.open .dropdown-content {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+        padding: 10px;
+      }
+
+      .rupiah-row {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'Courier New', monospace;
+        padding: 2px 0;
+        gap: 10px;
+      }
+      .rupiah-row .label {
+        min-width: 290px;
+        white-space: pre;
+        text-align: left;
+      }
+      .rupiah-row .value {
+        min-width: 290px;
+        text-align: right;
+        font-weight: 600;
+        color: #0f172a;
+      }
+    </style> 
+  </head> 
+  <body> 
+    <div class="container"> 
+      <h1>Kalkulator Gaji</h1> 
+      <input type="number" id="overtimeHours" placeholder="Jam Lembur"> 
+      <input type="number" id="overtimeDays" placeholder="Hari Lembur"> 
+      <button onclick="calculateSalary()">Hitung</button> 
+      <div id="tull" class="tull-box"></div>
+      <div class="result" id="result"></div> 
+    </div> 
+    <script>
+      function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR'
+        }).format(angka);
+      }
+
+      function formatAngka(angka) {
+        return angka.toLocaleString('id-ID', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).padStart(12, ' ');
+      }
+
+      function toggleDropdown(element) {
+        element.classList.toggle("open");
+      }
+
+      function createDropdown(title, items, total) {
+        const list = items.map(item => {
+          const [label, value] = item.split(" : ");
+          return `<div class="rupiah-row"><span class="label">${label} :</span><span class="value">${value}</span></div>`;
+        }).join('');
+        return `
+          <div class="dropdown" onclick="toggleDropdown(this)">
+            <div class="dropdown-header">
+              <span>${title}</span>
+              <span>${total}</span>
+            </div>
+            <div class="dropdown-content">
+              ${list}
+            </div>
+          </div>
+        `;
+      }
+
+      function calculateSalary() {
+        const overtimeHours = parseFloat(document.getElementById("overtimeHours").value) || 0;
+        const overtimeDays = parseFloat(document.getElementById("overtimeDays").value) || 0;
+
+        const transportasi_hr = 22;
+        const mkn_harian = 22;
+
+        const transportasi = 22500;
+        const mkn_hr = 20000;
+        const mkn_lbr = 20000;
+        const ot = 40107;
+
+        const gaji_pokok = 6263446;
+        const tunj_jbtn = 150000;
+        const tunj_keahlian = 30000;
+        const tunj_pnddkn = 15000;
+        const tunj_seniorts = 480000;
+        const total_ttp = gaji_pokok + tunj_jbtn + tunj_keahlian + tunj_pnddkn + tunj_seniorts;
+
+        const tnj_transport = transportasi_hr * transportasi;
+        const tnj_mkn_hr = mkn_harian * mkn_hr;
+        const tnj_mkn_lbr = overtimeDays * mkn_lbr;
+        const tnj_lembur = overtimeHours * ot;
+        const total_tdk_ttp = tnj_transport + tnj_mkn_hr + tnj_mkn_lbr + tnj_lembur;
+
+        const gros_pndptn1bln = total_ttp + total_tdk_ttp;
+
+        const bpjstk = total_ttp * 0.02;
+        const jp = total_ttp * 0.01;
+        const bpjs = total_ttp * 0.01;
+        const pajak = gros_pndptn1bln * 0.02;
+        const total_pot = bpjstk + jp + bpjs + pajak;
+
+        const net_pndptn1bln = gros_pndptn1bln - total_pot;
+
+        const mandiri = 2837596;
+        const nafkah = 3500000;
+        const kontrakan = 500000;
+        const zkt_pnghsln = net_pndptn1bln * 0.025;
+        const total_peng_ttp = mandiri + nafkah + kontrakan + zkt_pnghsln;
+
+        const bensin = 280000;
+        const srv_mtr = 70000;
+        const internet = 100000;
+        const makan = 30000 * 26;
+        const total_peng_tdk_ttp = bensin + srv_mtr + internet + makan;
+
+        const total_peng = total_peng_ttp + total_peng_tdk_ttp;
+        const ths = net_pndptn1bln - total_peng;
+
+        document.getElementById("tull").innerHTML = `
+          <div class="tull-row">Tunjangan Transportasi @hari : Rp ${formatAngka(transportasi)}</div>
+          <div class="tull-row">Tunjangan Makan Harian @hari : Rp ${formatAngka(mkn_hr)}</div>
+          <div class="tull-row">Tunjangan Makan Lembur @hari : Rp ${formatAngka(mkn_lbr)}</div>
+          <div class="tull-row">Tunjangan Lembur @jam        : Rp ${formatAngka(ot)}</div>
+        `;
+
+        document.getElementById("result").innerHTML = `
+          ${createDropdown('Pendapatan Tetap', [
+            `Gaji Pokok                         : Rp ${formatAngka(gaji_pokok)}`,
+            `Tunjangan Jabatan                  : Rp ${formatAngka(tunj_jbtn)}`,
+            `Tunjangan Keahlian                 : Rp ${formatAngka(tunj_keahlian)}`,
+            `Tunjangan Pendidikan               : Rp ${formatAngka(tunj_pnddkn)}`,
+            `Tunjangan Senioritas               : Rp ${formatAngka(tunj_seniorts)}`
+          ], formatRupiah(total_ttp))}
+
+          ${createDropdown('Pendapatan Tidak Tetap', [
+            `Tunjangan Transportasi             : Rp ${formatAngka(tnj_transport)}`,
+            `Tunjangan Makan Harian             : Rp ${formatAngka(tnj_mkn_hr)}`,
+            `Tunjangan Makan Lembur             : Rp ${formatAngka(tnj_mkn_lbr)}`,
+            `Tunjangan Lembur                   : Rp ${formatAngka(tnj_lembur)}`
+          ], formatRupiah(total_tdk_ttp))}
+
+          ${createDropdown('Gaji Kotor', [
+            `Total Pendapatan                   : Rp ${formatAngka(gros_pndptn1bln)}`
+          ], formatRupiah(gros_pndptn1bln))}
+
+          ${createDropdown('Potongan', [
+            `BPJS Kesehatan                     : Rp ${formatAngka(bpjs)}`,
+            `BPJS Ketenagakerjaan               : Rp ${formatAngka(bpjstk)}`,
+            `Pajak                              : Rp ${formatAngka(pajak)}`
+          ], formatRupiah(total_pot))}
+
+          ${createDropdown('Gaji Bersih', [
+            `Pendapatan Bersih                  : Rp ${formatAngka(net_pndptn1bln)}`
+          ], formatRupiah(net_pndptn1bln))}
+
+          ${createDropdown('Total Pengeluaran', [
+            `Pengeluaran Tetap                  : Rp ${formatAngka(total_peng_ttp)}`,
+              ` - Mandiri                         : Rp ${formatAngka(mandiri)}`,
+              ` - Nafkah                          : Rp ${formatAngka(nafkah)}`,
+              ` - Kontrakan                       : Rp ${formatAngka(kontrakan)}`,
+              ` - Zakat Penghasilan               : Rp ${formatAngka(zkt_pnghsln)}`,
+            `Pengeluaran Tidak Tetap            : Rp ${formatAngka(total_peng_tdk_ttp)}`,
+              ` - Bensin                          : Rp ${formatAngka(bensin)}`,
+              ` - Servis Motor                    : Rp ${formatAngka(srv_mtr)}`,
+              ` - Internet                        : Rp ${formatAngka(internet)}`,
+              ` - Makan                           : Rp ${formatAngka(makan)}`
+          ], formatRupiah(total_peng))}
+
+          <div class="highlight">Take Home Salary: ${formatRupiah(ths)}</div>
+        `;
+      }
+    </script> 
+  </body>
+</html>
